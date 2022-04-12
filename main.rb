@@ -1,13 +1,17 @@
 # Colors: Blue, Yellow, Green, Purple, Orange, Red
 # Feedback Colors: White (correct color but wrong spot),
 # Black (correct color and correct spot)
+
+BLUE = '  blue  '
+YELLOW = ' yellow '
+GREEN = ' green  '
+PURPLE = ' purple '
+ORANGE = ' orange '
+RED = '  red   '
+
+# Game: handles gameplay methods and stuff that doesn't fit into other classes
 class Game
-  BLUE = ' blue '
-  YELLOW = 'yellow'
-  GREEN = 'green '
-  PURPLE = 'purple'
-  ORANGE = 'orange'
-  RED = ' red  '
+  attr_accessor :player, :computer, :board
   
   def initialize
     @player = Player.new
@@ -19,7 +23,14 @@ class Game
     puts "||-----Let's Play-----||"
     puts '||-----Mastermind!----||'
     puts '||--------------------||'
-    @player.input_guess
+    play_round(1)
+  end
+
+  def play_round(round)
+    puts "Guess ##{round}!"
+    guess = player.input_guess
+    feedback = computer.check_guess(guess)
+    board.update_board(round, guess, feedback)
   end
 end
 
@@ -30,7 +41,26 @@ class GameBoard
 
   def initialize
     board = []
+    board[0] = ['||---------Mastermind!----------||']
     @board = board
+  end
+
+  def update_board(round, guess, feedback)
+    board[round] = []
+    board[round][0] = "#{round}."
+    board[round][1] = guess
+    board[round][2] = feedback
+    display_board
+  end
+
+  def display_board
+    board.each do |row|
+      print row[0]
+      row[1].each { |color| print color } unless row[1].nil?
+      puts ''
+      print '   ' unless row[1].nil?
+      row[2].each { |color| print color } unless row[2].nil?
+    end
   end
 end
 
@@ -38,41 +68,36 @@ end
 class Player
   attr_accessor :guess
 
-  def initialize
-    @guess = ''
-  end
-
   def input_guess
-    puts 'B = blue, Y = yellow, G = green, P = purple, O = orange, R = red'
+    puts 'b = blue, y = yellow, g = green, p = purple, o = orange, r = red'
     puts 'Type four letters and press enter to submit your guess.'
     guess = gets.chomp.split('')
+    convert_color(guess)
     if guess.any?('ERROR')
-      puts "Error: please enter one of the letters shown above."
+      puts 'Error: please enter one of the letters shown above.'
       input_guess
-    else 
-      @guess = guess
+    else
+      guess
     end
   end
 
   def convert_color(array)
-    guess.map! do |color_code|
+    array.map! do |color_code|
       case color_code
-      when 'b' || 'B'
-        color_code = BLUE
-      when 'y' || 'Y'
-        color_code = YELLOW
-      when 'g' || 'G'
-        color_code = GREEN
-      when 'p' || 'P'
-        color_code = PURPLE
-      when 'o' || 'O'
-        color_code = ORANGE
-      when 'r' || 'R'
-        color_code = RED
-      else 
-        color_code = 'ERROR'
-        
-        break
+      when 'b'
+        BLUE
+      when 'y'
+        YELLOW
+      when 'g'
+        GREEN
+      when 'p'
+        PURPLE
+      when 'o'
+        ORANGE
+      when 'r'
+        RED
+      else
+        'ERROR'
       end
     end
   end
@@ -81,6 +106,8 @@ end
 # data: secret code
 # methods: generate code, check code
 class Computer
+  attr_accessor :secret_code
+  
   def initialize
     generate_secret_code
   end
@@ -88,10 +115,22 @@ class Computer
   def generate_secret_code
     secret_code = []
     colors = [BLUE, YELLOW, GREEN, PURPLE, ORANGE, RED]
-    4.times do |num| 
-    secret_code[num] = colors.sample
-    @secret_code = secret_code
+    4.times do |num|
+      secret_code[num] = colors.sample
     end
+    @secret_code = secret_code
+  end
+
+  def check_guess(guess)
+    feedback = ['------ ', ' ------ ', ' ------ ', ' ------ ']
+    guess.each_with_index do |color, i|
+      if color == secret_code[i]
+        feedback[i] = ' black  '
+      elsif secret_code.include?(color)
+        feedback[i] = ' white  '
+      end
+    end
+    feedback.shuffle
   end
 end
 
