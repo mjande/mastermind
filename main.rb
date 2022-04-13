@@ -40,7 +40,7 @@ class Game
   end
 
   def end_game(feedback, round)
-    if feedback.all?('black')
+    if feedback[0] == 4
       puts 'You win! Way to go!'
     elsif round == 12
       puts 'Game over! Better luck next time!'
@@ -65,7 +65,7 @@ class GameBoard
     board[round] = []
     board[round][0] = "#{round}."
     board[round][1] = guess
-    board[round][2] = feedback
+    board[round][2] = "Correct color and position: #{feedback[0]},\ncorrect color, wrong position: #{feedback[1]}. "
     display_board
   end
 
@@ -78,9 +78,8 @@ class GameBoard
         print row[0]
         row[1].each { |color| print color }
         puts ''
-        print '  '
-        row[2].each { |color| print color }
-        puts ''
+        #print '  '
+        puts row[2]
         puts ' '
       end
     end
@@ -136,7 +135,6 @@ class Computer
 
   def initialize
     generate_secret_code
-    
   end
 
   def generate_secret_code
@@ -148,21 +146,27 @@ class Computer
     @secret_code = secret_code
   end
 
-  # not at all working as intended, shows too many whites in weird circumstances
   def check_guess(guess)
-    feedback = []
-    guess.each_with_index do |color, i|
-      if color == secret_code[i]
-        feedback[i] = '  black '
-      else
-        feedback[i] = color
+    p secret_code
+    num_of_black = 0
+    num_of_white = 0
+    colors = [BLUE, YELLOW, GREEN, PURPLE, ORANGE, RED]
+    colors.each do |color|
+      if secret_code.include?(color)
+        secret_code_color = secret_code.count(color)
+        guess.each_index do |i|
+          if guess[i] == color && secret_code[i] == color
+            num_of_black += 1
+            secret_code_color -= 1
+          end
+        end
+        while secret_code_color.positive?
+          num_of_white += 1 if guess.count(color) >= secret_code_color
+          secret_code_color -= 1
+        end
       end
     end
-    # if colors from guess match, replace with white (code this later)
-    feedback.each_with_index do |color, i|
-      if color 
-    end
-    feedback.sort
+    [num_of_black, num_of_white]
   end
 end
 
