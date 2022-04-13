@@ -151,14 +151,16 @@ class Computer
   # not at all working as intended, shows too many whites in weird circumstances
   def check_guess(guess)
     feedback = []
-    black_num = 0
     guess.each_with_index do |color, i|
       if color == secret_code[i]
         feedback[i] = '  black '
-        black_num += 1
-      elsif secret_code.count(color) > black_num
-        feedback[i] = '  white '
+      else
+        feedback[i] = color
       end
+    end
+    # if colors from guess match, replace with white (code this later)
+    feedback.each_with_index do |color, i|
+      if color 
     end
     feedback.sort
   end
