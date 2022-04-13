@@ -12,18 +12,23 @@ RED = '  red   '
 # Game: handles gameplay methods and stuff that doesn't fit into other classes
 class Game
   attr_accessor :player, :computer, :board
-  
+
   def initialize
     @player = Player.new
     @computer = Computer.new
     puts 'Generating secret code...'
     @board = GameBoard.new
+    win = false
+    turn = 1
     puts 'Generating game board...'
     puts '||--------------------||'
     puts "||-----Let's Play-----||"
     puts '||-----Mastermind!----||'
     puts '||--------------------||'
-    play_round(1)
+    until win || turn > 12
+      play_round(turn)
+      turn += 1
+    end
   end
 
   def play_round(round)
@@ -31,6 +36,17 @@ class Game
     guess = player.input_guess
     feedback = computer.check_guess(guess)
     board.update_board(round, guess, feedback)
+    end_game(feedback, round)
+  end
+
+  def end_game(feedback, round)
+    if feedback.all?('black')
+      puts 'You win! Way to go!'
+    elsif round == 12
+      puts 'Game over! Better luck next time!'
+      secret_code = computer.secret_code
+      puts "Secret code = #{secret_code}"
+    end
   end
 end
 
@@ -55,11 +71,18 @@ class GameBoard
 
   def display_board
     board.each do |row|
-      print row[0]
-      row[1].each { |color| print color } unless row[1].nil?
-      puts ''
-      print '   ' unless row[1].nil?
-      row[2].each { |color| print color } unless row[2].nil?
+      if row[1].nil?
+        puts row[0]
+        puts ' '
+      elsif row[0].nil? == false
+        print row[0]
+        row[1].each { |color| print color }
+        puts ''
+        print '  '
+        row[2].each { |color| print color }
+        puts ''
+        puts ' '
+      end
     end
   end
 end
@@ -73,8 +96,11 @@ class Player
     puts 'Type four letters and press enter to submit your guess.'
     guess = gets.chomp.split('')
     convert_color(guess)
-    if guess.any?('ERROR')
-      puts 'Error: please enter one of the letters shown above.'
+    if guess.length != 4
+      puts 'Error: please enter four of the letters shown above.'
+      input_guess
+    elsif guess.any?('ERROR')
+      puts 'Error: please enter four of the letters shown above.'
       input_guess
     else
       guess
@@ -107,9 +133,10 @@ end
 # methods: generate code, check code
 class Computer
   attr_accessor :secret_code
-  
+
   def initialize
     generate_secret_code
+    
   end
 
   def generate_secret_code
@@ -121,16 +148,19 @@ class Computer
     @secret_code = secret_code
   end
 
+  # not at all working as intended, shows too many whites in weird circumstances
   def check_guess(guess)
-    feedback = ['------ ', ' ------ ', ' ------ ', ' ------ ']
+    feedback = []
+    black_num = 0
     guess.each_with_index do |color, i|
       if color == secret_code[i]
-        feedback[i] = ' black  '
-      elsif secret_code.include?(color)
-        feedback[i] = ' white  '
+        feedback[i] = '  black '
+        black_num += 1
+      elsif secret_code.count(color) > black_num
+        feedback[i] = '  white '
       end
     end
-    feedback.shuffle
+    feedback.sort
   end
 end
 
