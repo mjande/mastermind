@@ -2,50 +2,98 @@
 # Feedback Colors: White (correct color but wrong spot),
 # Black (correct color and correct spot)
 
-BLUE = '  blue  '
+BLUE = ' blue   '
 YELLOW = ' yellow '
 GREEN = ' green  '
 PURPLE = ' purple '
 ORANGE = ' orange '
-RED = '  red   '
+RED = ' red    '
 
 # Game: handles gameplay methods and stuff that doesn't fit into other classes
 class Game
-  attr_accessor :player, :computer, :board
+  attr_accessor :player, :computer, :board, :turn, :endgame
 
   def initialize
     @player = Player.new
     @computer = Computer.new
-    puts 'Generating secret code...'
     @board = GameBoard.new
-    win = false
-    turn = 1
-    puts 'Generating game board...'
+    @endgame = false
     puts '||--------------------||'
     puts "||-----Let's Play-----||"
     puts '||-----Mastermind!----||'
     puts '||--------------------||'
-    until win || turn > 12
-      play_round(turn)
-      turn += 1
+    gamemode = choose_game_mode
+    play_game(gamemode)
+  end
+
+  def choose_game_mode
+    puts 'Choose a gamemode! 1. Codebreaker 2. Codemaker'
+    gamemode = gets.chomp
+    unless gamemode.include?('1') || gamemode.include?('2')
+      puts 'ERROR: Type 1 or 2'
+      gamemode = gets.chomp
+    end
+    gamemode
+  end
+
+  def play_game(choice)
+    turn = 1
+    result = 0
+    case choice
+    when '1'
+      computer.generate_secret_code
+      until turn > 12 || result == 'endgame'
+        result = play_human_round(turn)
+        turn += 1
+      end
+    when '2'
+      secret_code = player.input_secret_code
+      computer.store_player_code(secret_code)
+      until turn > 12 || result == 'endgame'
+        result = play_computer_round(turn)
+        turn += 1
+      end
     end
   end
 
-  def play_round(round)
+  def play_human_round(round)
     puts "Guess ##{round}!"
     guess = player.input_guess
     feedback = computer.check_guess(guess)
     board.update_board(round, guess, feedback)
-    end_game(feedback, round)
+    end_human_game(feedback, round)
   end
 
-  def end_game(feedback, round)
+  def play_computer_round(round)
+    guess = computer.input_guess(round)
+    feedback = computer.check_guess(guess)
+    board.update_board(round, guess, feedback)
+    end_computer_game(feedback, round)
+  end
+
+  def end_human_game(feedback, round)
+    secret_code = computer.secret_code
     if feedback[0] == 4
       puts 'You win! Way to go!'
+      puts "Secret code = #{secret_code}"
+      'endgame'
     elsif round == 12
       puts 'Game over! Better luck next time!'
-      secret_code = computer.secret_code
       puts "Secret code = #{secret_code}"
+      'endgame'
+    end
+  end
+
+  def end_computer_game(feedback, round)
+    secret_code = computer.secret_code
+    if feedback[0] == 4
+      puts 'The computer won! Better luck next time!'
+      puts "Secret code = #{secret_code}"
+      'endgame'
+    elsif round == 12
+      puts 'You did it! You beat the computer!'
+      puts "Secret code = #{secret_code}"
+      'endgame'
     end
   end
 end
@@ -65,7 +113,8 @@ class GameBoard
     board[round] = []
     board[round][0] = "#{round}."
     board[round][1] = guess
-    board[round][2] = "Correct color and position: #{feedback[0]},\ncorrect color, wrong position: #{feedback[1]}. "
+    board[round][2] = "Correct color and position: #{feedback[0]},
+      \ncorrect color, wrong position: #{feedback[1]}. "
     display_board
   end
 
@@ -78,7 +127,6 @@ class GameBoard
         print row[0]
         row[1].each { |color| print color }
         puts ''
-        #print '  '
         puts row[2]
         puts ' '
       end
@@ -88,12 +136,11 @@ end
 
 # methods: prompt for input, accept input, win message
 class Player
-  attr_accessor :guess
 
   def input_guess
     puts 'b = blue, y = yellow, g = green, p = purple, o = orange, r = red'
     puts 'Type four letters and press enter to submit your guess.'
-    guess = gets.chomp.split('')
+    guess = gets.chomp.downcase.split('')
     convert_color(guess)
     if guess.length != 4
       puts 'Error: please enter four of the letters shown above.'
@@ -104,6 +151,13 @@ class Player
     else
       guess
     end
+  end
+
+  def input_secret_code
+    puts 'b = blue, y = yellow, g = green, p = purple, o = orange, r = red'
+    puts 'Type four letters and press enter to submit your secret code.'
+    secret_code = gets.chomp.downcase.split('')
+    convert_color(secret_code)
   end
 
   def convert_color(array)
@@ -131,11 +185,7 @@ end
 # data: secret code
 # methods: generate code, check code
 class Computer
-  attr_accessor :secret_code
-
-  def initialize
-    generate_secret_code
-  end
+  attr_accessor :secret_code, :feedback, :possible_guesses
 
   def generate_secret_code
     secret_code = []
@@ -146,8 +196,21 @@ class Computer
     @secret_code = secret_code
   end
 
+  def store_player_code(secret_code)
+    @secret_code = secret_code
+    @possible_guesses = (1111..6666).to_a
+  end
+
+  def input_guess
+    case feedback
+    when nil
+      guess = 1122
+    when [0,0]
+      
+  end
+
+
   def check_guess(guess)
-    p secret_code
     num_of_black = 0
     num_of_white = 0
     colors = [BLUE, YELLOW, GREEN, PURPLE, ORANGE, RED]
@@ -166,8 +229,11 @@ class Computer
         end
       end
     end
-    [num_of_black, num_of_white]
+    @internal_feedback = [num_of_black, num_of_white]
   end
+end
+
+def play_again?
 end
 
 Game.new
