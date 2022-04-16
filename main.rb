@@ -332,7 +332,4 @@ class Computer
   end
 end
 
-def play_again?
-end
-
 Game.new
