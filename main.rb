@@ -2,8 +2,6 @@
 # Feedback Colors: White (correct color but wrong spot),
 # Black (correct color and correct spot)
 
-require 'pry-byebug'
-
 BLUE = ' blue   '
 YELLOW = ' yellow '
 GREEN = ' green  '
