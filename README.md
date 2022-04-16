@@ -7,3 +7,6 @@ https://www.theodinproject.com/lessons/ruby-mastermind
 
 Built using Ruby 
 
+Learning Goals
+Better understanding of Ruby basics
+Practice using classes and other OOP concepts
