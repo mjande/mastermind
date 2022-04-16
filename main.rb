@@ -336,6 +336,3 @@ def play_again?
 end
 
 Game.new
-
-# To-do: fix guess conversion (Do I need to store as instance variable?)
-# finish minmax algorithm
